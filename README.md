@@ -19,14 +19,14 @@ Building The Provider
 Clone repository to: `$GOPATH/src/github.com/section-io/terraform-provider-section`
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
-$ git clone git@github.com:terraform-providers/terraform-provider-section
+$ mkdir -p $GOPATH/src/github.com/section-io; cd $GOPATH/src/github.com/section-io
+$ git clone git@github.com:section-io/terraform-provider-section
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-section
+$ cd $GOPATH/src/github.com/section-io/terraform-provider-section
 $ make build
 ```
 
