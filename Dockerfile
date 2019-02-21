@@ -8,7 +8,7 @@ WORKDIR /go/src/app
 RUN go get -v \
   github.com/kisielk/errcheck \
   github.com/pkg/errors \
-  github.com/section-io/rackcorp-sdk-go/api \
+  github.com/section-io/section-sdk-go/api \
   github.com/stretchr/testify/assert \
   golang.org/x/lint/golint \
   gopkg.in/h2non/gock.v1
@@ -18,7 +18,7 @@ RUN mkdir -p "${GOPATH}/src/github.com/hashicorp/" && \
     cd "${GOPATH}/src/github.com/hashicorp/" && \
       git clone --verbose --branch v0.11.10 --depth 1 https://github.com/hashicorp/terraform
 
-WORKDIR /go/src/github.com/section-io/terraform-provider-rackcorp
+WORKDIR /go/src/github.com/section-io/terraform-provider-section
 COPY . .
 
 # Capture dependency versions
@@ -44,11 +44,11 @@ RUN cd "/go/src/$(go list -e -f '{{.ImportComment}}')" && \
 FROM hashicorp/terraform:0.11.10
 
 RUN mkdir -p /work/ && \
-  printf 'providers {\n  rackcorp = "/go/bin/terraform-provider-rackcorp"\n}\n' >/root/.terraformrc
+  printf 'providers {\n  section = "/go/bin/terraform-provider-section"\n}\n' >/root/.terraformrc
 
 WORKDIR /work
 
-COPY --from=build /go/bin/terraform-provider-rackcorp /go/bin/
+COPY --from=build /go/bin/terraform-provider-section /go/bin/
 
 COPY example.tf ./main.tf
 

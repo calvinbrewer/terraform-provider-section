@@ -1,4 +1,4 @@
-package rackcorp
+package section
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"

@@ -1,4 +1,4 @@
-package rackcorp
+package section
 
 type notFoundError struct {
 	Message string
