@@ -2,258 +2,90 @@ package rackcorp
 
 import (
 	"log"
-	"time"
 	"strconv"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/pkg/errors"
-	"github.com/section-io/rackcorp-sdk-go/api"
+	"github.com/section-io/section-sdk-go/api"
 )
 
-func storageSchemaElement() *schema.Resource {
+func accountSchemaElement() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
-			"size_gb": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice(
-					api.StorageTypes,
-					false,
-				),
-			},
-			"sort_order": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-		},
-	}
-}
-
-func firewallPolicySchemaElement() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"direction": {
+			"hostname": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice(
-					api.FirewallPolicyDirections,
-					false,
-				),
 			},
-			"policy": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice(
-					api.FirewallPolicyTypes,
-					false,
-				),
-			},
-			"comment": {
+			"origin": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"ip_address_from": {
+			"stack_name": {
 				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ip_address_to": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"port_from": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"port_to": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"protocol": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"order": {
-				Type:     schema.TypeInt,
 				Required: true,
 			},
 		},
 	}
 }
 
-func nicSchemaElement() *schema.Resource {
+func applicationSchemaElement() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"hostname": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"origin": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"stack_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+		},
+	}
+}
+
+func environmentSchemaElement() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"vlan": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"speed": {
-				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"ipv4": {
-				Type:     schema.TypeInt,
+			"source_environment_name": {
+				Type:     schema.TypeString,
 				Required: true,
 			},
-			"pool_ipv4": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"ipv6": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"pool_ipv6": {
-				Type:     schema.TypeInt,
+			"domain_name": {
+				Type:     schema.TypeString,
 				Optional: true,
 			},
 		},
 	}
 }
 
-func resourceRackcorpServer() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceRackcorpServerCreate,
-		Delete: resourceRackcorpServerDelete,
-		Read:   resourceRackcorpServerRead,
-		Update: resourceRackcorpServerUpdate,
-		Schema: map[string]*schema.Schema{
-			"country": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"server_class": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice(
-					api.ServerClasses,
-					false,
-				),
-			},
-			"operating_system": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"cpu_count": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"memory_gb": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"root_password": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				Sensitive: true,
-			},
-			"data_center_id": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"traffic_gb": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"post_install_script": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"storage": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 1,
-				Elem:     storageSchemaElement(),
-			},
-			"firewall_policies": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: false,
-				MinItems: 1,
-				Elem:     firewallPolicySchemaElement(),
-			},
-			"nics": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 1,
-				Elem:     nicSchemaElement(),
-			},
-			"device_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"primary_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"contract_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"contract_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"device_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"device_cancel_transaction_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"device_cancel_transaction_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"host_group_id": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-		},
+func resourceSectionAPICreateAccount(d *schema.ResourceData, config providerConfig) error {
+	accountName := d.Get("name")
+	hostname := d.Get("hostname")
+	origin := d.Get("origin")
+	stackName := d.Get("stack_name")
+
+	response, err := config.Client.AccountCreate(accountName, hostname, origin, stackName)
+
+	if err != nil {
+		return err
 	}
+
+	return response
 }
 
 func resourceRackcorpServerPopulateFromDevice(d *schema.ResourceData, config providerConfig) error {
@@ -279,7 +111,7 @@ func resourceRackcorpServerPopulateFromDevice(d *schema.ResourceData, config pro
 	panicOnError(d.Set("name", device.Name))
 	panicOnError(d.Set("primary_ip", device.PrimaryIP))
 	panicOnError(d.Set("data_center_id", device.DataCenterId))
-	panicOnError(d.Set("firewall_policies",  convertFirewallToMap(device.FirewallPolicies)))
+	panicOnError(d.Set("firewall_policies", convertFirewallToMap(device.FirewallPolicies)))
 
 	powerSwitch := getExtraByKey("SYS_POWERSWITCH", device.Extra)
 	if powerSwitch == "ONLINE" {
@@ -330,7 +162,7 @@ func resourceRackcorpServerPopulateFromContract(d *schema.ResourceData, config p
 	log.Printf("[DEBUG] Rackcorp contract: %#v", contract)
 
 	panicOnError(d.Set("contract_status", contract.Status))
-	if(contract.DeviceId != "") { // DeviceId can be blank for pending contracts
+	if contract.DeviceId != "" { // DeviceId can be blank for pending contracts
 		intID, err := strconv.Atoi(contract.DeviceId)
 		if err != nil {
 			return errors.Wrap(err, "Could not get Rackcorp contract device ID as integer'.")
@@ -377,7 +209,7 @@ func getExtraByKey(key string, extras []api.DeviceExtra) string {
 }
 
 func startServer(deviceID int, config providerConfig) error {
-	stringID := strconv.Itoa(deviceID);
+	stringID := strconv.Itoa(deviceID)
 	transaction, err := config.Client.TransactionCreate(
 		api.TransactionTypeStartup,
 		api.TransactionObjectTypeDevice,
@@ -395,7 +227,7 @@ func startServer(deviceID int, config providerConfig) error {
 }
 
 func cancelServer(deviceID int, d *schema.ResourceData, config providerConfig) error {
-	stringID := strconv.Itoa(deviceID);
+	stringID := strconv.Itoa(deviceID)
 	transaction, err := config.Client.TransactionCreate(
 		api.TransactionTypeCancel,
 		api.TransactionObjectTypeDevice,
@@ -709,7 +541,7 @@ func resourceRackcorpServerUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	d.Partial(true)
 	if d.HasChange("firewall_policies") {
-		old, new := d.GetChange("firewall_policies");
+		old, new := d.GetChange("firewall_policies")
 		newPolicies := parseFirewallPolicies(convertFirewallPoliciesToSlice(new))
 		oldPolicies := parseFirewallPolicies(convertFirewallPoliciesToSlice(old))
 		requestPolicies := []api.FirewallPolicy{}
@@ -746,7 +578,9 @@ func resourceRackcorpServerUpdate(d *schema.ResourceData, meta interface{}) erro
 
 func arrayContains(arr []api.FirewallPolicy, item api.FirewallPolicy) bool {
 	for _, thing := range arr {
-		if isFirewallSame(thing, item) {return true}
+		if isFirewallSame(thing, item) {
+			return true
+		}
 	}
 	return false
 }
