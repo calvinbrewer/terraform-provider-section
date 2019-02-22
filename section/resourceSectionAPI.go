@@ -31,6 +31,10 @@ func accountSchemaElement() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"account_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -51,6 +55,10 @@ func applicationSchemaElement() *schema.Resource {
 				Required: true,
 			},
 			"account_id": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"application_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -75,9 +83,13 @@ func environmentSchemaElement() *schema.Resource {
 			},
 			"account_id": {
 				Type:     schema.TypeInt,
-				Computed: true,
+				Required: true,
 			},
 			"application_id": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"environment_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -127,6 +139,8 @@ func resourceSectionAPICreateEnvironment(d *schema.ResourceData, config provider
 	applicationId := d.Get("application_id")
 
 	response, err := config.Client.EnvironmentCreate(accountId, applicationId, name, sourceEnvironmentName, domainName)
+
+	panicOnError(d.Set("environment_id", response.id))
 
 	if err != nil {
 		return err
