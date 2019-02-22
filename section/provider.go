@@ -3,7 +3,7 @@ package section
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/section-io/section-sdk-go/api"
+	"github.com/calvinbrewer/section-sdk-go.git"
 )
 
 // Provider returns a terraform.ResourceProvider.

@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/calvinbrewer/section-sdk-go.git"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/pkg/errors"
-	"github.com/section-io/section-sdk-go/api"
 )
 
 func accountSchemaElement() *schema.Resource {
@@ -50,6 +50,10 @@ func applicationSchemaElement() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"account_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -69,6 +73,14 @@ func environmentSchemaElement() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"account_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"application_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -81,6 +93,8 @@ func resourceSectionAPICreateAccount(d *schema.ResourceData, config providerConf
 
 	response, err := config.Client.AccountCreate(accountName, hostname, origin, stackName)
 
+	panicOnError(d.Set("account_id", response.id))
+
 	if err != nil {
 		return err
 	}
@@ -92,8 +106,11 @@ func resourceSectionAPICreateApplication(d *schema.ResourceData, config provider
 	hostname := d.Get("hostname")
 	origin := d.Get("origin")
 	stackName := d.Get("stack_name")
+	accountId := d.Get("account_id")
 
-	response, err := config.Client.ApplicationCreate(accountName, hostname, origin, stackName)
+	response, err := config.Client.ApplicationCreate(accountId, hostname, origin, stackName)
+
+	panicOnError(d.Set("application_id", response.id))
 
 	if err != nil {
 		return err
@@ -106,8 +123,10 @@ func resourceSectionAPICreateEnvironment(d *schema.ResourceData, config provider
 	name := d.Get("name")
 	sourceEnvironmentName := d.Get("source_environment_name")
 	domainName := d.Get("domain_name")
+	accountId := d.Get("account_id")
+	applicationId := d.Get("application_id")
 
-	response, err := config.Client.AccountCreate(accountName, hostname, origin, stackName)
+	response, err := config.Client.EnvironmentCreate(accountId, applicationId, name, sourceEnvironmentName, domainName)
 
 	if err != nil {
 		return err
