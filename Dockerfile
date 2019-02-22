@@ -8,7 +8,7 @@ WORKDIR /go/src/app
 RUN go get -v \
   github.com/kisielk/errcheck \
   github.com/pkg/errors \
-  github.com/section-io/section-sdk-go/api \
+  github.com/calvinbrewer/section-sdk-go.git \
   github.com/stretchr/testify/assert \
   golang.org/x/lint/golint \
   gopkg.in/h2non/gock.v1
