@@ -1,16 +1,15 @@
 package section
 
 import (
-	"log"
-	"strconv"
-	"time"
-
-	"github.com/calvinbrewer/section-sdk-go.git"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
-	"github.com/pkg/errors"
 )
+
+func panicOnError(err error) {
+	if err == nil {
+		return
+	}
+	panic(err)
+}
 
 func accountSchemaElement() *schema.Resource {
 	return &schema.Resource{
@@ -98,53 +97,41 @@ func environmentSchemaElement() *schema.Resource {
 }
 
 func resourceSectionAPICreateAccount(d *schema.ResourceData, config providerConfig) error {
-	accountName := d.Get("name")
-	hostname := d.Get("hostname")
-	origin := d.Get("origin")
-	stackName := d.Get("stack_name")
+	accountName := d.Get("name").(string)
+	hostname := d.Get("hostname").(string)
+	origin := d.Get("origin").(string)
+	stackName := d.Get("stack_name").(string)
 
 	response, err := config.Client.AccountCreate(accountName, hostname, origin, stackName)
 
-	panicOnError(d.Set("account_id", response.id))
+	panicOnError(d.Set("account_id", response.AccountID))
 
-	if err != nil {
-		return err
-	}
-
-	return response
+	return err
 }
 
 func resourceSectionAPICreateApplication(d *schema.ResourceData, config providerConfig) error {
-	hostname := d.Get("hostname")
-	origin := d.Get("origin")
-	stackName := d.Get("stack_name")
-	accountId := d.Get("account_id")
+	hostname := d.Get("hostname").(string)
+	origin := d.Get("origin").(string)
+	stackName := d.Get("stack_name").(string)
+	accountId := d.Get("account_id").(int)
 
 	response, err := config.Client.ApplicationCreate(accountId, hostname, origin, stackName)
 
-	panicOnError(d.Set("application_id", response.id))
+	panicOnError(d.Set("application_id", response.ApplicationID))
 
-	if err != nil {
-		return err
-	}
-
-	return response
+	return err
 }
 
 func resourceSectionAPICreateEnvironment(d *schema.ResourceData, config providerConfig) error {
-	name := d.Get("name")
-	sourceEnvironmentName := d.Get("source_environment_name")
-	domainName := d.Get("domain_name")
-	accountId := d.Get("account_id")
-	applicationId := d.Get("application_id")
+	name := d.Get("name").(string)
+	sourceEnvironmentName := d.Get("source_environment_name").(string)
+	domainName := d.Get("domain_name").(string)
+	accountId := d.Get("account_id").(int)
+	applicationId := d.Get("application_id").(int)
 
 	response, err := config.Client.EnvironmentCreate(accountId, applicationId, name, sourceEnvironmentName, domainName)
 
-	panicOnError(d.Set("environment_id", response.id))
+	panicOnError(d.Set("environment_id", response.EnvironmentID))
 
-	if err != nil {
-		return err
-	}
-
-	return response
+	return err
 }

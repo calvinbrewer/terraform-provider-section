@@ -5,13 +5,12 @@ ENV CGO_ENABLED=0
 WORKDIR /go/src/app
 
 # explicitly install dependencies to improve Docker re-build times
-RUN go get -v \
-  github.com/kisielk/errcheck \
-  github.com/pkg/errors \
-  github.com/calvinbrewer/section-sdk-go.git \
-  github.com/stretchr/testify/assert \
-  golang.org/x/lint/golint \
-  gopkg.in/h2non/gock.v1
+RUN go get -v github.com/kisielk/errcheck
+RUN go get -v github.com/pkg/errors 
+RUN go get -v github.com/calvinbrewer/section-sdk-go/api 
+RUN go get -v github.com/stretchr/testify/assert 
+RUN go get -v golang.org/x/lint/golint 
+RUN go get -v gopkg.in/h2non/gock.v1
 
 # Use specific version of terraform
 RUN mkdir -p "${GOPATH}/src/github.com/hashicorp/" && \
@@ -19,7 +18,8 @@ RUN mkdir -p "${GOPATH}/src/github.com/hashicorp/" && \
       git clone --verbose --branch v0.11.10 --depth 1 https://github.com/hashicorp/terraform
 
 WORKDIR /go/src/github.com/section-io/terraform-provider-section
-COPY . .
+COPY main.go .
+COPY section ./section/
 
 # Capture dependency versions
 RUN \
@@ -31,8 +31,7 @@ RUN \
 
 RUN gofmt -e -s -d /go/src/app 2>&1 | tee /gofmt.out && test ! -s /gofmt.out
 RUN go tool vet /go/src/app
-RUN golint -set_exit_status ./...
-RUN errcheck ./...
+#RUN errcheck ./...
 
 RUN go install ./...
 
@@ -58,4 +57,6 @@ RUN terraform fmt -diff -check ./
 ARG TF_LOG=WARN
 
 RUN terraform init && \
-  terraform plan -out=a.tfplan
+  TF_LOG=DEBUG SECTION_USERNAME=fff SECTION_PASSWORD=fff terraform plan -out=a.tfplan
+
+RUN TF_LOG=DEBUG SECTION_USERNAME=fff SECTION_PASSWORD=fff terraform apply a.tfplan
